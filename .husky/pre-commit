@@ -1,0 +1,2 @@
+npm --prefix backend test
+npm --prefix backend exec -- lint-staged --config backend/lint-staged.config.mjs

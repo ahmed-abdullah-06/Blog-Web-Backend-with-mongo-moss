@@ -1,0 +1,41 @@
+services:
+  # PostgreSQL database container
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: devblog
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data   # keeps data even if container restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  # Backend (Express API)
+  backend:
+    image: devblog-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/devblog
+      JWT_SECRET: your_jwt_secret_here
+      PORT: 5000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules   # prevents local node_modules from overwriting container's
+
+volumes:
+  db_data:
